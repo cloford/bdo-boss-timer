@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Boss timer icon">
+  <defs>
+    <radialGradient id="ember" cx="50%" cy="48%" r="58%">
+      <stop offset="0" stop-color="#3a2a12"/>
+      <stop offset="0.56" stop-color="#15120d"/>
+      <stop offset="1" stop-color="#050505"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="22" y1="16" x2="106" y2="112">
+      <stop offset="0" stop-color="#fff1ae"/>
+      <stop offset="0.44" stop-color="#c79735"/>
+      <stop offset="1" stop-color="#6f4614"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="24" fill="#050505"/>
+  <circle cx="64" cy="64" r="54" fill="url(#ember)"/>
+  <path
+    d="M24 67c12-30 43-47 80-37-20 4-35 14-45 30 14-10 30-14 47-10-17 5-31 16-42 34 15-8 29-10 42-5-22 20-58 24-82-12Z"
+    fill="url(#gold)"
+    filter="url(#glow)"
+  />
+  <path
+    d="M37 73c7 14 23 22 40 19-8 8-21 11-35 7-11-4-19-12-23-24 5 2 11 2 18-2Z"
+    fill="#080806"
+    opacity="0.72"
+  />
+  <path
+    d="M62 25l9 24 25 2-19 16 6 25-21-13-22 13 7-25-20-16 25-2 10-24Z"
+    fill="none"
+    stroke="#f6d06d"
+    stroke-width="5"
+    stroke-linejoin="round"
+    opacity="0.92"
+  />
+  <circle cx="64" cy="64" r="8" fill="#f8d777"/>
+</svg>
