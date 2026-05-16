@@ -4,66 +4,16 @@
     <meta charset="utf-8">
     <title>ボス出現タイマー テスト仕様書</title>
     <style>
-      @page {
-        size: A4;
-        margin: 16mm;
-      }
-
-      body {
-        color: #1d232b;
-        font-family: "Yu Gothic", "Meiryo", sans-serif;
-        line-height: 1.65;
-      }
-
-      h1 {
-        border-bottom: 3px solid #222;
-        font-size: 24px;
-        margin: 0 0 16px;
-        padding-bottom: 8px;
-      }
-
-      h2 {
-        border-left: 6px solid #2f6b3f;
-        font-size: 17px;
-        margin: 26px 0 10px;
-        padding-left: 10px;
-      }
-
-      table {
-        border-collapse: collapse;
-        font-size: 12px;
-        margin-top: 8px;
-        width: 100%;
-      }
-
-      th,
-      td {
-        border: 1px solid #9aa4b2;
-        padding: 6px 8px;
-        vertical-align: top;
-      }
-
-      th {
-        background: #e9efe9;
-        text-align: left;
-      }
-
-      .meta {
-        background: #f5f7f5;
-        border: 1px solid #cfd7cf;
-        padding: 10px 12px;
-      }
-
-      .pass {
-        color: #186b36;
-        font-weight: 700;
-      }
-
-      code {
-        background: #f2f4f7;
-        border-radius: 4px;
-        padding: 1px 4px;
-      }
+      @page { size: A4; margin: 16mm; }
+      body { color: #1d232b; font-family: "Yu Gothic", "Meiryo", sans-serif; line-height: 1.65; }
+      h1 { border-bottom: 3px solid #222; font-size: 24px; margin: 0 0 16px; padding-bottom: 8px; }
+      h2 { border-left: 6px solid #2f6b3f; font-size: 17px; margin: 24px 0 10px; padding-left: 10px; }
+      table { border-collapse: collapse; font-size: 11.5px; margin-top: 8px; width: 100%; }
+      th, td { border: 1px solid #9aa4b2; padding: 6px 8px; vertical-align: top; }
+      th { background: #e9efe9; text-align: left; }
+      .meta { background: #f5f7f5; border: 1px solid #cfd7cf; padding: 10px 12px; }
+      .pass { color: #186b36; font-weight: 700; }
+      code { background: #f2f4f7; border-radius: 4px; padding: 1px 4px; }
     </style>
   </head>
   <body>
@@ -72,15 +22,15 @@
     <div class="meta">
       <div><strong>対象:</strong> 黒い砂漠 ボス出現タイマー</div>
       <div><strong>作成日:</strong> 2026年5月17日</div>
-      <div><strong>対象ファイル:</strong> <code>index.html</code>, <code>styles.css</code>, <code>app.js</code>, <code>assets/*</code></div>
-      <div><strong>実行環境:</strong> Windows ローカル環境、オフライン起動想定</div>
+      <div><strong>対象ファイル:</strong> <code>index.html</code>, <code>styles.css</code>, <code>app.js</code>, <code>assets/*</code>, <code>electron/*</code></div>
+      <div><strong>実行環境:</strong> Windows ローカル環境、オフライン起動およびElectronデスクトップ起動想定</div>
     </div>
 
     <h2>1. テスト目的</h2>
     <p>
-      本仕様書は、ボス出現タイマーがインターネット接続なしで起動し、主要機能であるボス予定表示、
-      アラーム設定、アラーム音量調整、アラーム音選択、ローカル画像表示、
-      マトリックス風背景表示に必要な構成を満たしていることを確認する。
+      本仕様書は、ボス出現タイマーがインターネット接続なしで起動し、ボス予定表示、アラーム設定、
+      音量調整、音色選択、通知タイミング選択、次回アラーム一覧、状態表示、履歴、逃し通知、
+      ローカル画像表示、マトリックス風背景、Electron起動構成に必要な要素を満たしていることを確認する。
     </p>
 
     <h2>2. テスト範囲</h2>
@@ -89,12 +39,12 @@
         <tr><th>区分</th><th>確認内容</th></tr>
       </thead>
       <tbody>
-        <tr><td>画面構成</td><td>次のボス、カウントダウン、アラーム操作、ボス選択、今後の予定、元の表が表示できること。</td></tr>
-        <tr><td>オフライン資産</td><td>表画像、SVGアイコン、ショートカット用ICOがローカルに存在すること。</td></tr>
+        <tr><td>画面構成</td><td>次のボス、カウントダウン、今日/明日以降の予定、次に鳴るアラーム、履歴、元表が表示できること。</td></tr>
+        <tr><td>操作</td><td>アラーム有効化、音量テスト、アラーム停止、設定リセット、設定コピー、履歴クリアが存在すること。</td></tr>
+        <tr><td>設定</td><td>音量、音色、通知タイミング、ボス選択プリセットが保存・反映される構成であること。</td></tr>
         <tr><td>スケジュール</td><td>ガーモスを含む登録済みボス時刻が内部データとして保持されていること。</td></tr>
-        <tr><td>アラーム</td><td>15分前、5分前、ちょうどのアラーム処理が存在すること。</td></tr>
-        <tr><td>音量・音色</td><td>音量テスト、音量調整、アラーム音選択のUIと再生設定が存在すること。</td></tr>
-        <tr><td>背景</td><td>表画像背景ではなく、Canvasによるマトリックス風背景に切り替わっていること。</td></tr>
+        <tr><td>オフライン資産</td><td>表画像、SVGアイコン、ショートカット用ICOがローカルに存在すること。</td></tr>
+        <tr><td>デスクトップ化</td><td>Electronの起動ファイル、package設定、アイコン、配布設定が存在すること。</td></tr>
       </tbody>
     </table>
 
@@ -108,8 +58,10 @@
         <tr><td>TC-002</td><td>オフライン資産</td><td><code>assets</code> 配下の画像とアイコンを確認する。</td><td>表画像、SVG、ICOが存在する。</td><td class="pass">PASS</td></tr>
         <tr><td>TC-003</td><td>背景</td><td>CSSとJSの背景実装を確認する。</td><td>Canvas背景が設定され、表画像は背景に使われない。</td><td class="pass">PASS</td></tr>
         <tr><td>TC-004</td><td>ガーモス時刻</td><td>内部スケジュールからガーモス枠を抽出する。</td><td>元表に基づくガーモス枠が登録されている。</td><td class="pass">PASS</td></tr>
-        <tr><td>TC-005</td><td>通知タイミング</td><td>アラームオフセットを確認する。</td><td>0分、5分、15分前が設定されている。</td><td class="pass">PASS</td></tr>
+        <tr><td>TC-005</td><td>通知タイミング</td><td>アラームオフセットを確認する。</td><td>0/1/5/15/30分前が選択肢として存在し、初期値は0/5/15分前。</td><td class="pass">PASS</td></tr>
         <tr><td>TC-006</td><td>音量・音色</td><td>音量スライダー、音量テスト、音色選択、再生音量適用処理を確認する。</td><td>設定UIが存在し、再生時に音量と音色設定が参照される。</td><td class="pass">PASS</td></tr>
+        <tr><td>TC-007</td><td>常用機能</td><td>状態表示、次回アラーム一覧、履歴、リセット、コピー、停止を確認する。</td><td>各UIと対応処理が存在する。</td><td class="pass">PASS</td></tr>
+        <tr><td>TC-008</td><td>Electron構成</td><td><code>package.json</code> と <code>electron/main.js</code> を確認する。</td><td>Electron起動とWindows portableビルド設定が存在する。</td><td class="pass">PASS</td></tr>
       </tbody>
     </table>
 
@@ -130,12 +82,11 @@
       </tbody>
     </table>
 
-    <h2>5. 補足</h2>
+    <h2>5. 実機確認観点</h2>
     <p>
-      ブラウザの音声再生はユーザー操作後に許可される仕様のため、実機確認では
-      <code>音量テスト</code> ボタンで現在の音量と音色を確認し、必要に応じて音量スライダーと
-      アラーム音選択を変更する。
-      本テストでは、オフライン起動に必要な資産とアラーム処理の存在を自動確認した。
+      ブラウザまたはElectronアプリで起動し、<code>音量テスト</code>、通知許可、プリセット切り替え、
+      アラーム停止、設定リセット、設定コピー、履歴クリア、元表表示を目視確認する。
+      スリープ復帰と長時間常駐はWindows実機での継続確認が必要。
     </p>
   </body>
 </html>

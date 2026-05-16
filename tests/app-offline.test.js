@@ -51,6 +51,7 @@ function createElement(id) {
     classList: {
       add() {},
       remove() {},
+      toggle() {},
     },
     append() {},
     addEventListener() {},

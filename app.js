@@ -340,12 +340,12 @@ function bindControls() {
 
   elements.notifyToggle.addEventListener("change", async () => {
     if (!elements.notifyToggle.checked) return;
-    if (!("Notification" in window)) {
+    if (!window.Notification) {
       elements.notifyToggle.checked = false;
       showToast("このブラウザでは通知を使えません。");
       return;
     }
-    const permission = await Notification.requestPermission();
+    const permission = await window.Notification.requestPermission();
     if (permission !== "granted") {
       elements.notifyToggle.checked = false;
       showToast("通知が許可されませんでした。");
@@ -558,8 +558,8 @@ function fireAlarm(event, label) {
   recordAlarm(title, body, label);
   playAlarmTone(4);
 
-  if (elements.notifyToggle.checked && "Notification" in window && Notification.permission === "granted") {
-    new Notification(title, { body });
+  if (elements.notifyToggle.checked && window.Notification && window.Notification.permission === "granted") {
+    new window.Notification(title, { body });
   }
 }
 
@@ -693,7 +693,7 @@ function updateStatus(upcomingAlarms) {
   elements.audioStatus.classList.toggle("ready", audioReady);
   elements.audioStatus.classList.toggle("warn", !audioReady);
 
-  const notificationState = "Notification" in window ? Notification.permission : "unsupported";
+  const notificationState = window.Notification ? window.Notification.permission : "unsupported";
   const notificationLabel = notificationState === "granted" ? "許可済み" : notificationState === "denied" ? "拒否" : notificationState === "unsupported" ? "非対応" : "未許可";
   elements.notificationStatus.textContent = `通知: ${notificationLabel}`;
   elements.notificationStatus.classList.toggle("ready", notificationState === "granted");

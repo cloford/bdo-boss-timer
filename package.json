@@ -20,7 +20,8 @@
     ],
     "win": {
       "icon": "assets/app-icon.ico",
-      "target": "portable"
+      "target": "portable",
+      "signAndEditExecutable": false
     }
   },
   "devDependencies": {
