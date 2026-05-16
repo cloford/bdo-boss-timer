@@ -22,7 +22,7 @@ body {
   min-height: 100vh;
   background:
     linear-gradient(180deg, rgba(18, 19, 23, 0.72), #121317 360px),
-    url("assets/boss-schedule.png") center bottom / cover fixed;
+    url("assets/boss-background-ai-clean.png") center bottom / cover fixed;
   color: var(--text);
 }
 
