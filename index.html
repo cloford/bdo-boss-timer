@@ -37,6 +37,8 @@
         <button id="enable-audio" type="button">アラーム有効化</button>
         <button id="test-volume" type="button">音量テスト</button>
         <button id="stop-alarm" type="button" disabled>アラーム停止</button>
+        <button id="reset-settings" type="button">設定リセット</button>
+        <button id="export-settings" type="button">設定コピー</button>
         <label class="control-field">
           <span>音量 <strong id="volume-value">60%</strong></span>
           <input id="alarm-volume" type="range" min="0" max="100" value="60">
@@ -55,13 +57,23 @@
         </label>
       </section>
 
-      <section class="option-row" aria-label="通知タイミング">
+      <section class="status-panel" aria-label="状態">
+        <div class="status-item" id="audio-status">音声: 未有効</div>
+        <div class="status-item" id="notification-status">通知: 未確認</div>
+        <div class="status-item" id="alarm-status">次回通知: --</div>
+        <div class="status-item" id="missed-status">逃し通知: なし</div>
+      </section>
+
+      <details class="settings-panel" open>
+        <summary>設定</summary>
+        <section class="option-row" aria-label="通知タイミング">
         <div class="section-heading compact-heading">
           <h2>通知タイミング</h2>
           <span id="alert-summary">--</span>
         </div>
         <div id="alert-offsets" class="pill-list"></div>
-      </section>
+        </section>
+      </details>
 
       <section class="content">
         <aside class="boss-selector" aria-labelledby="boss-filter-title">
@@ -91,6 +103,18 @@
             <span id="later-count">--</span>
           </div>
           <div id="later-list" class="upcoming-list compact-list"></div>
+
+          <div class="section-heading later-heading">
+            <h2>次に鳴るアラーム</h2>
+            <span id="alarm-count">--</span>
+          </div>
+          <div id="alarm-list" class="upcoming-list compact-list"></div>
+
+          <div class="section-heading later-heading">
+            <h2>アラーム履歴</h2>
+            <button id="clear-history" type="button">履歴クリア</button>
+          </div>
+          <div id="history-list" class="history-list"></div>
         </section>
       </section>
 

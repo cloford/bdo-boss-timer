@@ -1,6 +1,8 @@
 const DAYS = ["日", "月", "火", "水", "木", "金", "土"];
 const STORAGE_KEY = "bdo-boss-timer-selected-v1";
 const SETTINGS_KEY = "bdo-boss-timer-audio-settings-v2";
+const HISTORY_KEY = "bdo-boss-timer-history-v1";
+const LAST_SEEN_KEY = "bdo-boss-timer-last-seen-v1";
 const DEFAULT_AUDIO_SETTINGS = {
   volume: 60,
   sound: "bell",
@@ -48,6 +50,7 @@ const events = buildEvents(scheduleRows);
 const bosses = [...new Set(events.flatMap((event) => event.bosses))].sort((a, b) => a.localeCompare(b, "ja"));
 const selected = new Set(loadSelected());
 const audioSettings = loadAudioSettings();
+const alarmHistory = loadAlarmHistory();
 const firedAlerts = new Set();
 const activeAudioNodes = new Set();
 
@@ -65,18 +68,28 @@ const elements = {
   bossList: document.querySelector("#boss-list"),
   todayList: document.querySelector("#today-list"),
   laterList: document.querySelector("#later-list"),
+  alarmList: document.querySelector("#alarm-list"),
+  historyList: document.querySelector("#history-list"),
   todayCount: document.querySelector("#today-count"),
   laterCount: document.querySelector("#later-count"),
+  alarmCount: document.querySelector("#alarm-count"),
   selectedCount: document.querySelector("#selected-count"),
   enableAudio: document.querySelector("#enable-audio"),
   testVolume: document.querySelector("#test-volume"),
   stopAlarm: document.querySelector("#stop-alarm"),
+  resetSettings: document.querySelector("#reset-settings"),
+  exportSettings: document.querySelector("#export-settings"),
   alarmVolume: document.querySelector("#alarm-volume"),
   volumeValue: document.querySelector("#volume-value"),
   alarmSound: document.querySelector("#alarm-sound"),
   notifyToggle: document.querySelector("#notify-toggle"),
   alertOffsets: document.querySelector("#alert-offsets"),
   alertSummary: document.querySelector("#alert-summary"),
+  audioStatus: document.querySelector("#audio-status"),
+  notificationStatus: document.querySelector("#notification-status"),
+  alarmStatus: document.querySelector("#alarm-status"),
+  missedStatus: document.querySelector("#missed-status"),
+  clearHistory: document.querySelector("#clear-history"),
   toast: document.querySelector("#toast"),
 };
 
@@ -84,6 +97,8 @@ startMatrixBackground();
 renderAudioSettings();
 renderAlertOffsetOptions();
 renderBossOptions();
+renderHistory();
+checkMissedEvents();
 bindControls();
 tick();
 window.setInterval(tick, 1000);
@@ -174,6 +189,15 @@ function loadAudioSettings() {
   }
 }
 
+function loadAlarmHistory() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+    return Array.isArray(saved) ? saved.slice(0, 30) : [];
+  } catch {
+    return [];
+  }
+}
+
 function normalizeAlertOffsets(value) {
   const allowed = ALERT_OFFSET_OPTIONS.map((option) => option.minutes);
   const offsets = Array.isArray(value) ? value.map(Number).filter((minutes) => allowed.includes(minutes)) : DEFAULT_AUDIO_SETTINGS.alertOffsets;
@@ -186,6 +210,10 @@ function saveSelected() {
 
 function saveAudioSettings() {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(audioSettings));
+}
+
+function saveAlarmHistory() {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(alarmHistory.slice(0, 30)));
 }
 
 function renderAudioSettings() {
@@ -269,6 +297,35 @@ function bindControls() {
     showToast("アラームを停止しました。");
   });
 
+  elements.resetSettings.addEventListener("click", () => {
+    selected.clear();
+    bosses.forEach((boss) => selected.add(boss));
+    audioSettings.volume = DEFAULT_AUDIO_SETTINGS.volume;
+    audioSettings.sound = DEFAULT_AUDIO_SETTINGS.sound;
+    audioSettings.alertOffsets = [...DEFAULT_AUDIO_SETTINGS.alertOffsets];
+    saveSelected();
+    saveAudioSettings();
+    renderAudioSettings();
+    renderAlertOffsetOptions();
+    renderBossOptions();
+    tick();
+    showToast("設定を初期状態に戻しました。");
+  });
+
+  elements.exportSettings.addEventListener("click", async () => {
+    const snapshot = JSON.stringify({
+      selectedBosses: [...selected],
+      audioSettings,
+      exportedAt: new Date().toISOString(),
+    }, null, 2);
+    try {
+      await navigator.clipboard.writeText(snapshot);
+      showToast("設定をクリップボードにコピーしました。");
+    } catch {
+      showToast("設定コピーに失敗しました。ブラウザの権限を確認してください。");
+    }
+  });
+
   elements.alarmVolume.addEventListener("input", () => {
     audioSettings.volume = clampVolume(Number(elements.alarmVolume.value));
     elements.volumeValue.textContent = `${audioSettings.volume}%`;
@@ -299,6 +356,13 @@ function bindControls() {
     button.addEventListener("click", () => {
       applyPreset(button.dataset.preset);
     });
+  });
+
+  elements.clearHistory.addEventListener("click", () => {
+    alarmHistory.splice(0);
+    saveAlarmHistory();
+    renderHistory();
+    showToast("アラーム履歴を消去しました。");
   });
 }
 
@@ -337,8 +401,10 @@ function tick() {
   elements.currentTime.textContent = formatTime(now);
 
   const upcoming = getUpcomingEvents(now, 18);
+  const upcomingAlarms = getUpcomingAlarms(now, 8);
   const next = upcoming[0];
   elements.selectedCount.textContent = `${selected.size} / ${bosses.length} 選択中`;
+  updateStatus(upcomingAlarms);
 
   if (!next) {
     elements.nextBoss.textContent = "対象なし";
@@ -346,6 +412,7 @@ function tick() {
     elements.nextTime.textContent = "--";
     elements.countdown.textContent = "--:--:--";
     renderUpcoming([], now);
+    renderUpcomingAlarms([]);
     return;
   }
 
@@ -355,7 +422,9 @@ function tick() {
   elements.nextDetail.textContent = `あと ${formatDuration(remainingMs)} / ${next.bosses.join(" / ")}`;
   elements.countdown.textContent = formatDuration(Math.max(0, remainingMs));
   renderUpcoming(upcoming, now);
+  renderUpcomingAlarms(upcomingAlarms);
   checkAlerts(upcoming, now);
+  localStorage.setItem(LAST_SEEN_KEY, String(now.getTime()));
 }
 
 function getUpcomingEvents(now, limit) {
@@ -421,6 +490,50 @@ function renderEventRows(container, rows, now, emptyText) {
   });
 }
 
+function getUpcomingAlarms(now, limit) {
+  if (!audioSettings.alertOffsets.length) return [];
+
+  const rows = [];
+  getUpcomingEvents(now, 24).forEach((event) => {
+    audioSettings.alertOffsets.forEach((minutes) => {
+      const date = new Date(event.date.getTime() - minutes * 60 * 1000);
+      if (date.getTime() >= now.getTime() - 1000) {
+        rows.push({ ...event, alertDate: date, alertLabel: formatAlertOffset(minutes) });
+      }
+    });
+  });
+  return rows.sort((a, b) => a.alertDate - b.alertDate).slice(0, limit);
+}
+
+function renderUpcomingAlarms(alarms) {
+  elements.alarmList.innerHTML = "";
+  elements.alarmCount.textContent = `${alarms.length}件`;
+  if (!alarms.length) {
+    elements.alarmList.innerHTML = `<p class="muted">鳴る予定のアラームはありません。</p>`;
+    return;
+  }
+
+  alarms.forEach((alarm) => {
+    const row = document.createElement("div");
+    row.className = "event-row";
+
+    const time = document.createElement("div");
+    time.className = "event-time";
+    time.textContent = formatTime(alarm.alertDate).slice(0, 5);
+
+    const bossesText = document.createElement("div");
+    bossesText.className = "event-bosses";
+    bossesText.innerHTML = renderBossChips(alarm.bosses);
+
+    const meta = document.createElement("div");
+    meta.className = "event-meta";
+    meta.textContent = `${alarm.alertLabel} / ${formatEventDate(alarm.date)} ${alarm.time}`;
+
+    row.append(time, bossesText, meta);
+    elements.alarmList.append(row);
+  });
+}
+
 function checkAlerts(upcoming, now) {
   if (!audioSettings.alertOffsets.length) return;
 
@@ -442,11 +555,44 @@ function fireAlarm(event, label) {
   const title = `${event.bosses.join(" / ")} ${label}`;
   const body = `${formatEventDate(event.date)} ${event.time} 出現`;
   showToast(`${title} - ${body}`);
+  recordAlarm(title, body, label);
   playAlarmTone(4);
 
   if (elements.notifyToggle.checked && "Notification" in window && Notification.permission === "granted") {
     new Notification(title, { body });
   }
+}
+
+function recordAlarm(title, body, label) {
+  alarmHistory.unshift({
+    title,
+    body,
+    label,
+    at: new Date().toISOString(),
+  });
+  alarmHistory.splice(30);
+  saveAlarmHistory();
+  renderHistory();
+}
+
+function renderHistory() {
+  elements.historyList.innerHTML = "";
+  if (!alarmHistory.length) {
+    elements.historyList.innerHTML = `<p class="muted">履歴はまだありません。</p>`;
+    return;
+  }
+
+  alarmHistory.slice(0, 10).forEach((entry) => {
+    const row = document.createElement("div");
+    row.className = "history-row";
+    const at = new Date(entry.at);
+    row.innerHTML = `
+      <span>${formatEventDate(at)} ${formatTime(at).slice(0, 5)}</span>
+      <strong>${escapeHtml(entry.title)}</strong>
+      <span>${escapeHtml(entry.body)}</span>
+    `;
+    elements.historyList.append(row);
+  });
 }
 
 function playAlarmTone(seconds) {
@@ -506,6 +652,62 @@ function stopAlarmSound() {
   elements.stopAlarm.disabled = true;
 }
 
+function checkMissedEvents() {
+  const lastSeen = Number(localStorage.getItem(LAST_SEEN_KEY) || Date.now());
+  const now = Date.now();
+  if (!Number.isFinite(lastSeen) || now - lastSeen < 10 * 60 * 1000) {
+    elements.missedStatus.textContent = "逃し通知: なし";
+    return;
+  }
+
+  const missed = events.filter((event) => {
+    const eventDate = getMostRecentEventDate(event, new Date(now));
+    return eventDate && eventDate.getTime() > lastSeen && eventDate.getTime() < now
+      && event.bosses.some((boss) => selected.has(boss));
+  });
+
+  if (!missed.length) {
+    elements.missedStatus.textContent = "逃し通知: なし";
+    return;
+  }
+
+  elements.missedStatus.textContent = `逃し通知: ${missed.length}件`;
+  elements.missedStatus.classList.add("warn");
+  showToast(`前回起動後に ${missed.length} 件のボス予定が過ぎています。`);
+}
+
+function getMostRecentEventDate(event, now) {
+  for (let offset = 0; offset < 8; offset += 1) {
+    const date = new Date(now);
+    date.setDate(now.getDate() - offset);
+    if (date.getDay() !== event.day) continue;
+    date.setHours(event.hour, event.minute, 0, 0);
+    return date;
+  }
+  return null;
+}
+
+function updateStatus(upcomingAlarms) {
+  const audioReady = Boolean(audioContext && audioContext.state === "running");
+  elements.audioStatus.textContent = `音声: ${audioReady ? "有効" : "未有効"}`;
+  elements.audioStatus.classList.toggle("ready", audioReady);
+  elements.audioStatus.classList.toggle("warn", !audioReady);
+
+  const notificationState = "Notification" in window ? Notification.permission : "unsupported";
+  const notificationLabel = notificationState === "granted" ? "許可済み" : notificationState === "denied" ? "拒否" : notificationState === "unsupported" ? "非対応" : "未許可";
+  elements.notificationStatus.textContent = `通知: ${notificationLabel}`;
+  elements.notificationStatus.classList.toggle("ready", notificationState === "granted");
+
+  if (upcomingAlarms.length) {
+    const nextAlarm = upcomingAlarms[0];
+    elements.alarmStatus.textContent = `次回通知: ${formatTime(nextAlarm.alertDate).slice(0, 5)} ${nextAlarm.bosses.join(" / ")}`;
+    elements.alarmStatus.classList.add("ready");
+  } else {
+    elements.alarmStatus.textContent = "次回通知: なし";
+    elements.alarmStatus.classList.remove("ready");
+  }
+}
+
 function getSoundPattern(sound) {
   if (sound === "chime") return [523, 659, 784, 1046];
   if (sound === "alert") return [880, 880, 740, 880, 740];
@@ -534,6 +736,15 @@ function renderBossChips(bossesForEvent) {
   return bossesForEvent
     .map((boss) => `<span class="boss-chip ${getBossColorClass(boss)}">${boss}</span>`)
     .join("");
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function formatAlertOffset(minutes) {

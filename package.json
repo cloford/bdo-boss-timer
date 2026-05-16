@@ -1,0 +1,30 @@
+{
+  "name": "bdo-boss-timer",
+  "version": "1.0.0",
+  "description": "Black Desert boss timer for offline desktop use.",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "package": "electron-builder --win portable"
+  },
+  "build": {
+    "appId": "local.bdo.boss-timer",
+    "productName": "ボス出現タイマー",
+    "files": [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "assets/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/app-icon.ico",
+      "target": "portable"
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  }
+}
