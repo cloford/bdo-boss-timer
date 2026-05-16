@@ -141,7 +141,7 @@ context.window.setTimeout = context.window.setTimeout;
 context.window.clearTimeout = context.window.clearTimeout;
 
 vm.createContext(context);
-vm.runInContext(`${appJs}\nthis.__testState = { events, ALERT_OFFSETS };`, context, { filename: "app.js" });
+vm.runInContext(`${appJs}\nthis.__testState = { events, ALERT_OFFSET_OPTIONS, DEFAULT_AUDIO_SETTINGS };`, context, { filename: "app.js" });
 
 test("HTML includes required application controls", () => {
   [
@@ -150,11 +150,14 @@ test("HTML includes required application controls", () => {
     'id="countdown"',
     'id="enable-audio"',
     'id="test-volume"',
+    'id="stop-alarm"',
     'id="alarm-volume"',
     'id="alarm-sound"',
+    'id="alert-offsets"',
     'id="notify-toggle"',
     'id="boss-list"',
-    'id="upcoming-list"',
+    'id="today-list"',
+    'id="later-list"',
   ].forEach((needle) => assert(html.includes(needle), `${needle} is missing`));
 });
 
@@ -194,8 +197,10 @@ test("Boss schedule contains expected Garmoth slots", () => {
 });
 
 test("All alarm offsets are configured", () => {
-  const offsets = context.__testState.ALERT_OFFSETS.map((offset) => offset.minutes).sort((a, b) => a - b);
-  assert(JSON.stringify(offsets) === JSON.stringify([0, 5, 15]), "alarm offsets should be 0, 5, and 15 minutes");
+  const options = context.__testState.ALERT_OFFSET_OPTIONS.map((offset) => offset.minutes).sort((a, b) => a - b);
+  const defaults = context.__testState.DEFAULT_AUDIO_SETTINGS.alertOffsets.sort((a, b) => a - b);
+  assert(JSON.stringify(options) === JSON.stringify([0, 1, 5, 15, 30]), "alarm offset options should include 0, 1, 5, 15, and 30 minutes");
+  assert(JSON.stringify(defaults) === JSON.stringify([0, 5, 15]), "default alarm offsets should be 0, 5, and 15 minutes");
 });
 
 test("Alarm volume and sound selection are implemented", () => {
@@ -205,6 +210,7 @@ test("Alarm volume and sound selection are implemented", () => {
   assert(appJs.includes("DEFAULT_AUDIO_SETTINGS"), "default audio settings are missing");
   assert(appJs.includes("getSoundPattern"), "sound pattern selection is missing");
   assert(appJs.includes("audioSettings.volume / 100"), "alarm volume is not applied to playback");
+  assert(appJs.includes("stopAlarmSound"), "alarm stop handling is missing");
 });
 
 const failed = results.filter((result) => result.status === "FAIL");

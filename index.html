@@ -27,12 +27,16 @@
           <h2 id="next-boss">--</h2>
           <p id="next-detail">チェックされたボスから次回予定を計算します。</p>
         </div>
-        <div class="countdown" id="countdown">--:--:--</div>
+        <div class="countdown-block">
+          <span id="next-time">--</span>
+          <div class="countdown" id="countdown">--:--:--</div>
+        </div>
       </section>
 
       <section class="toolbar" aria-label="アラーム設定">
         <button id="enable-audio" type="button">アラーム有効化</button>
         <button id="test-volume" type="button">音量テスト</button>
+        <button id="stop-alarm" type="button" disabled>アラーム停止</button>
         <label class="control-field">
           <span>音量 <strong id="volume-value">60%</strong></span>
           <input id="alarm-volume" type="range" min="0" max="100" value="60">
@@ -49,22 +53,44 @@
           <input id="notify-toggle" type="checkbox">
           <span>通知も使う</span>
         </label>
-        <button id="select-all" type="button">全選択</button>
-        <button id="clear-all" type="button">全解除</button>
+      </section>
+
+      <section class="option-row" aria-label="通知タイミング">
+        <div class="section-heading compact-heading">
+          <h2>通知タイミング</h2>
+          <span id="alert-summary">--</span>
+        </div>
+        <div id="alert-offsets" class="pill-list"></div>
       </section>
 
       <section class="content">
         <aside class="boss-selector" aria-labelledby="boss-filter-title">
-          <h2 id="boss-filter-title">鳴らすボス</h2>
+          <div class="section-heading">
+            <h2 id="boss-filter-title">鳴らすボス</h2>
+            <span id="selected-count">--</span>
+          </div>
+          <div class="preset-actions" aria-label="プリセット">
+            <button data-preset="all" type="button">全部ON</button>
+            <button data-preset="garmoth" type="button">ガーモスだけ</button>
+            <button data-preset="loml" type="button">朝鮮ボス</button>
+            <button data-preset="world" type="button">ワールドボス</button>
+            <button data-preset="none" type="button">全部OFF</button>
+          </div>
           <div id="boss-list" class="boss-list"></div>
         </aside>
 
         <section class="schedule-panel" aria-labelledby="today-title">
           <div class="section-heading">
-            <h2 id="today-title">今後の予定</h2>
-            <span id="selected-count">--</span>
+            <h2 id="today-title">今日の予定</h2>
+            <span id="today-count">--</span>
           </div>
-          <div id="upcoming-list" class="upcoming-list"></div>
+          <div id="today-list" class="upcoming-list"></div>
+
+          <div class="section-heading later-heading">
+            <h2>明日以降</h2>
+            <span id="later-count">--</span>
+          </div>
+          <div id="later-list" class="upcoming-list compact-list"></div>
         </section>
       </section>
 
