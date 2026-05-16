@@ -22,7 +22,7 @@ body {
   min-height: 100vh;
   background:
     linear-gradient(180deg, rgba(18, 19, 23, 0.72), #121317 360px),
-    url("https://s1.pearlcdn.com/JP/Upload/WIKI/03f443bfce220260107101204849.png") center bottom / cover fixed;
+    url("assets/boss-schedule.png") center bottom / cover fixed;
   color: var(--text);
 }
 
