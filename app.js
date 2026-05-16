@@ -58,7 +58,6 @@ let audioContext = null;
 let toastTimer = 0;
 
 const elements = {
-  matrixCanvas: document.querySelector("#matrix-bg"),
   currentDate: document.querySelector("#current-date"),
   currentTime: document.querySelector("#current-time"),
   nextBoss: document.querySelector("#next-boss"),
@@ -93,7 +92,6 @@ const elements = {
   toast: document.querySelector("#toast"),
 };
 
-startMatrixBackground();
 renderAudioSettings();
 renderAlertOffsetOptions();
 renderBossOptions();
@@ -114,54 +112,6 @@ function buildEvents(rows) {
       bosses: bossesForSlot,
     }));
   });
-}
-
-function startMatrixBackground() {
-  const canvas = elements.matrixCanvas;
-  if (!canvas) return;
-
-  const context = canvas.getContext("2d");
-  const glyphs = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-    "\u30a2\u30a4\u30a6\u30a8\u30aa\u30ab\u30ad\u30af\u30b1\u30b3\u30b5\u30b7\u30b9\u30bb\u30bd";
-  const fontSize = 18;
-  let columns = 0;
-  let drops = [];
-
-  function resize() {
-    const ratio = window.devicePixelRatio || 1;
-    canvas.width = Math.floor(window.innerWidth * ratio);
-    canvas.height = Math.floor(window.innerHeight * ratio);
-    canvas.style.width = `${window.innerWidth}px`;
-    canvas.style.height = `${window.innerHeight}px`;
-    context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    columns = Math.ceil(window.innerWidth / fontSize);
-    drops = Array.from({ length: columns }, () => Math.random() * -window.innerHeight);
-  }
-
-  function draw() {
-    context.fillStyle = "rgba(5, 8, 6, 0.16)";
-    context.fillRect(0, 0, window.innerWidth, window.innerHeight);
-    context.font = `${fontSize}px Consolas, 'Courier New', monospace`;
-
-    for (let index = 0; index < columns; index += 1) {
-      const text = glyphs[Math.floor(Math.random() * glyphs.length)];
-      const x = index * fontSize;
-      const y = drops[index];
-      context.fillStyle = Math.random() > 0.975 ? "#d8ffe0" : "#25f06a";
-      context.fillText(text, x, y);
-      drops[index] += fontSize;
-
-      if (drops[index] > window.innerHeight + fontSize && Math.random() > 0.965) {
-        drops[index] = Math.random() * -120;
-      }
-    }
-
-    window.requestAnimationFrame(draw);
-  }
-
-  resize();
-  window.addEventListener("resize", resize);
-  draw();
 }
 
 function loadSelected() {
