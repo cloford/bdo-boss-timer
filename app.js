@@ -1,10 +1,15 @@
 const DAYS = ["日", "月", "火", "水", "木", "金", "土"];
 const STORAGE_KEY = "bdo-boss-timer-selected-v1";
+const SETTINGS_KEY = "bdo-boss-timer-audio-settings-v1";
 const ALERT_OFFSETS = [
   { minutes: 15, label: "15分前" },
   { minutes: 5, label: "5分前" },
   { minutes: 0, label: "ちょうど" },
 ];
+const DEFAULT_AUDIO_SETTINGS = {
+  volume: 60,
+  sound: "bell",
+};
 
 const scheduleRows = [
   ["0:15", { 1: ["ガーモス"], 3: ["ガーモス"], 5: ["ガーモス"], 0: ["ガーモス"] }],
@@ -21,6 +26,7 @@ const scheduleRows = [
 const events = buildEvents(scheduleRows);
 const bosses = [...new Set(events.flatMap((event) => event.bosses))].sort((a, b) => a.localeCompare(b, "ja"));
 const selected = new Set(loadSelected());
+const audioSettings = loadAudioSettings();
 const firedAlerts = new Set();
 
 let audioContext = null;
@@ -39,7 +45,11 @@ const elements = {
   upcomingList: document.querySelector("#upcoming-list"),
   selectedCount: document.querySelector("#selected-count"),
   enableAudio: document.querySelector("#enable-audio"),
+  testVolume: document.querySelector("#test-volume"),
   testAlarm: document.querySelector("#test-alarm"),
+  alarmVolume: document.querySelector("#alarm-volume"),
+  volumeValue: document.querySelector("#volume-value"),
+  alarmSound: document.querySelector("#alarm-sound"),
   notifyToggle: document.querySelector("#notify-toggle"),
   selectAll: document.querySelector("#select-all"),
   clearAll: document.querySelector("#clear-all"),
@@ -47,6 +57,7 @@ const elements = {
 };
 
 startMatrixBackground();
+renderAudioSettings();
 renderBossOptions();
 bindControls();
 tick();
@@ -127,8 +138,30 @@ function loadSelected() {
   return bosses;
 }
 
+function loadAudioSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
+    return {
+      volume: clampVolume(Number(saved?.volume ?? DEFAULT_AUDIO_SETTINGS.volume)),
+      sound: ["bell", "chime", "alert"].includes(saved?.sound) ? saved.sound : DEFAULT_AUDIO_SETTINGS.sound,
+    };
+  } catch {
+    return { ...DEFAULT_AUDIO_SETTINGS };
+  }
+}
+
 function saveSelected() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...selected]));
+}
+
+function saveAudioSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(audioSettings));
+}
+
+function renderAudioSettings() {
+  elements.alarmVolume.value = String(audioSettings.volume);
+  elements.volumeValue.textContent = `${audioSettings.volume}%`;
+  elements.alarmSound.value = audioSettings.sound;
 }
 
 function renderBossOptions() {
@@ -160,8 +193,26 @@ function bindControls() {
     showToast("アラームを有効化しました。ブラウザを開いたままにしておくと鳴ります。");
   });
 
+  elements.testVolume.addEventListener("click", async () => {
+    await enableAudio(false);
+    playAlarmTone(1.2);
+    showToast(`音量テスト: ${audioSettings.volume}% / ${getSoundLabel(audioSettings.sound)}`);
+  });
+
   elements.testAlarm.addEventListener("click", async () => {
     await scheduleAlarmTest();
+  });
+
+  elements.alarmVolume.addEventListener("input", () => {
+    audioSettings.volume = clampVolume(Number(elements.alarmVolume.value));
+    elements.volumeValue.textContent = `${audioSettings.volume}%`;
+    saveAudioSettings();
+  });
+
+  elements.alarmSound.addEventListener("change", () => {
+    audioSettings.sound = elements.alarmSound.value;
+    saveAudioSettings();
+    showToast(`アラーム音: ${getSoundLabel(audioSettings.sound)}`);
   });
 
   elements.notifyToggle.addEventListener("change", async () => {
@@ -195,25 +246,27 @@ function bindControls() {
   });
 }
 
-async function enableAudio() {
+async function enableAudio(playConfirmation = true) {
   if (!audioContext) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
   if (audioContext.state === "suspended") {
     await audioContext.resume();
   }
-  playAlarmTone(0.08);
+  if (playConfirmation) {
+    playAlarmTone(0.08);
+  }
 }
 
 async function scheduleAlarmTest() {
-  await enableAudio();
+  await enableAudio(false);
   window.clearTimeout(alarmTestTimer);
   window.clearInterval(alarmTestCountdown);
 
   let remainingSeconds = 10;
   elements.testAlarm.disabled = true;
   elements.testAlarm.textContent = `${remainingSeconds}秒後にテスト`;
-  showToast("10秒後にテストアラームを鳴らします。");
+  showToast(`10秒後にテストアラームを鳴らします。音量 ${audioSettings.volume}% / ${getSoundLabel(audioSettings.sound)}`);
 
   alarmTestCountdown = window.setInterval(() => {
     remainingSeconds -= 1;
@@ -340,19 +393,48 @@ function playAlarmTone(seconds) {
 
   const start = audioContext.currentTime;
   const gain = audioContext.createGain();
+  const volume = Math.max(0.0001, audioSettings.volume / 100);
   gain.gain.setValueAtTime(0.0001, start);
-  gain.gain.exponentialRampToValueAtTime(0.24, start + 0.03);
+  gain.gain.exponentialRampToValueAtTime(0.32 * volume, start + 0.03);
   gain.gain.exponentialRampToValueAtTime(0.0001, start + seconds);
   gain.connect(audioContext.destination);
 
-  [440, 660, 880].forEach((frequency, index) => {
+  getSoundPattern(audioSettings.sound).forEach((frequency, index) => {
     const osc = audioContext.createOscillator();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(frequency, start + index * 0.08);
+    osc.type = audioSettings.sound === "alert" ? "square" : "sine";
+    const noteStart = start + index * 0.12;
+    osc.frequency.setValueAtTime(frequency, noteStart);
     osc.connect(gain);
-    osc.start(start + index * 0.08);
+    osc.start(noteStart);
     osc.stop(start + seconds);
   });
+}
+
+function getSoundPattern(sound) {
+  if (sound === "chime") {
+    return [523, 659, 784, 1046];
+  }
+  if (sound === "alert") {
+    return [880, 880, 740, 880, 740];
+  }
+  return [440, 660, 880];
+}
+
+function getSoundLabel(sound) {
+  if (sound === "chime") {
+    return "チャイム";
+  }
+  if (sound === "alert") {
+    return "警告";
+  }
+  return "ベル";
+}
+
+function clampVolume(value) {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_AUDIO_SETTINGS.volume;
+  }
+  return Math.min(100, Math.max(0, Math.round(value)));
 }
 
 function showToast(message) {

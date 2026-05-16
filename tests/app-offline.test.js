@@ -149,7 +149,10 @@ test("HTML includes required application controls", () => {
     'id="next-boss"',
     'id="countdown"',
     'id="enable-audio"',
+    'id="test-volume"',
     'id="test-alarm"',
+    'id="alarm-volume"',
+    'id="alarm-sound"',
     'id="notify-toggle"',
     'id="boss-list"',
     'id="upcoming-list"',
@@ -200,6 +203,15 @@ test("Delayed alarm test button path is implemented", () => {
   assert(appJs.includes("scheduleAlarmTest"), "scheduleAlarmTest function is missing");
   assert(appJs.includes("10000"), "alarm test should wait 10 seconds");
   assert(appJs.includes("アラームテスト"), "alarm test label is missing");
+});
+
+test("Alarm volume and sound selection are implemented", () => {
+  assert(html.includes('id="alarm-volume"'), "alarm volume control is missing");
+  assert(html.includes('id="alarm-sound"'), "alarm sound selector is missing");
+  assert(html.includes('id="test-volume"'), "volume test button is missing");
+  assert(appJs.includes("DEFAULT_AUDIO_SETTINGS"), "default audio settings are missing");
+  assert(appJs.includes("getSoundPattern"), "sound pattern selection is missing");
+  assert(appJs.includes("audioSettings.volume / 100"), "alarm volume is not applied to playback");
 });
 
 const failed = results.filter((result) => result.status === "FAIL");

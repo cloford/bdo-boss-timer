@@ -32,7 +32,20 @@
 
       <section class="toolbar" aria-label="アラーム設定">
         <button id="enable-audio" type="button">アラーム有効化</button>
+        <button id="test-volume" type="button">音量テスト</button>
         <button id="test-alarm" type="button">10秒後にアラームテスト</button>
+        <label class="control-field">
+          <span>音量 <strong id="volume-value">60%</strong></span>
+          <input id="alarm-volume" type="range" min="0" max="100" value="60">
+        </label>
+        <label class="control-field compact">
+          <span>アラーム音</span>
+          <select id="alarm-sound">
+            <option value="bell">ベル</option>
+            <option value="chime">チャイム</option>
+            <option value="alert">警告</option>
+          </select>
+        </label>
         <label class="toggle">
           <input id="notify-toggle" type="checkbox">
           <span>通知も使う</span>
