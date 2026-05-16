@@ -79,7 +79,7 @@
     <h2>1. テスト目的</h2>
     <p>
       本仕様書は、ボス出現タイマーがインターネット接続なしで起動し、主要機能であるボス予定表示、
-      アラーム設定、アラーム音量調整、アラーム音選択、アラームテスト、ローカル画像表示、
+      アラーム設定、アラーム音量調整、アラーム音選択、ローカル画像表示、
       マトリックス風背景表示に必要な構成を満たしていることを確認する。
     </p>
 
@@ -92,7 +92,7 @@
         <tr><td>画面構成</td><td>次のボス、カウントダウン、アラーム操作、ボス選択、今後の予定、元の表が表示できること。</td></tr>
         <tr><td>オフライン資産</td><td>表画像、SVGアイコン、ショートカット用ICOがローカルに存在すること。</td></tr>
         <tr><td>スケジュール</td><td>ガーモスを含む登録済みボス時刻が内部データとして保持されていること。</td></tr>
-        <tr><td>アラーム</td><td>15分前、5分前、ちょうど、および10秒後テストアラームの処理が存在すること。</td></tr>
+        <tr><td>アラーム</td><td>15分前、5分前、ちょうどのアラーム処理が存在すること。</td></tr>
         <tr><td>音量・音色</td><td>音量テスト、音量調整、アラーム音選択のUIと再生設定が存在すること。</td></tr>
         <tr><td>背景</td><td>表画像背景ではなく、Canvasによるマトリックス風背景に切り替わっていること。</td></tr>
       </tbody>
@@ -109,8 +109,7 @@
         <tr><td>TC-003</td><td>背景</td><td>CSSとJSの背景実装を確認する。</td><td>Canvas背景が設定され、表画像は背景に使われない。</td><td class="pass">PASS</td></tr>
         <tr><td>TC-004</td><td>ガーモス時刻</td><td>内部スケジュールからガーモス枠を抽出する。</td><td>元表に基づくガーモス枠が登録されている。</td><td class="pass">PASS</td></tr>
         <tr><td>TC-005</td><td>通知タイミング</td><td>アラームオフセットを確認する。</td><td>0分、5分、15分前が設定されている。</td><td class="pass">PASS</td></tr>
-        <tr><td>TC-006</td><td>アラームテスト</td><td>テストボタン用処理を確認する。</td><td>押下後10秒でテストアラームを鳴らす処理が存在する。</td><td class="pass">PASS</td></tr>
-        <tr><td>TC-007</td><td>音量・音色</td><td>音量スライダー、音量テスト、音色選択、再生音量適用処理を確認する。</td><td>設定UIが存在し、再生時に音量と音色設定が参照される。</td><td class="pass">PASS</td></tr>
+        <tr><td>TC-006</td><td>音量・音色</td><td>音量スライダー、音量テスト、音色選択、再生音量適用処理を確認する。</td><td>設定UIが存在し、再生時に音量と音色設定が参照される。</td><td class="pass">PASS</td></tr>
       </tbody>
     </table>
 
@@ -127,7 +126,6 @@
         <tr><td>Matrix rain background is configured locally</td><td class="pass">PASS</td></tr>
         <tr><td>Boss schedule contains expected Garmoth slots</td><td class="pass">PASS</td></tr>
         <tr><td>All alarm offsets are configured</td><td class="pass">PASS</td></tr>
-        <tr><td>Delayed alarm test button path is implemented</td><td class="pass">PASS</td></tr>
         <tr><td>Alarm volume and sound selection are implemented</td><td class="pass">PASS</td></tr>
       </tbody>
     </table>
@@ -136,8 +134,7 @@
     <p>
       ブラウザの音声再生はユーザー操作後に許可される仕様のため、実機確認では
       <code>音量テスト</code> ボタンで現在の音量と音色を確認し、必要に応じて音量スライダーと
-      アラーム音選択を変更する。その後 <code>10秒後にアラームテスト</code> ボタンを押し、
-      10秒後に音と通知表示が出ることを確認する。
+      アラーム音選択を変更する。
       本テストでは、オフライン起動に必要な資産とアラーム処理の存在を自動確認した。
     </p>
   </body>

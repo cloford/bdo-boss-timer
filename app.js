@@ -31,8 +31,6 @@ const firedAlerts = new Set();
 
 let audioContext = null;
 let toastTimer = 0;
-let alarmTestTimer = 0;
-let alarmTestCountdown = 0;
 
 const elements = {
   matrixCanvas: document.querySelector("#matrix-bg"),
@@ -46,7 +44,6 @@ const elements = {
   selectedCount: document.querySelector("#selected-count"),
   enableAudio: document.querySelector("#enable-audio"),
   testVolume: document.querySelector("#test-volume"),
-  testAlarm: document.querySelector("#test-alarm"),
   alarmVolume: document.querySelector("#alarm-volume"),
   volumeValue: document.querySelector("#volume-value"),
   alarmSound: document.querySelector("#alarm-sound"),
@@ -199,10 +196,6 @@ function bindControls() {
     showToast(`音量テスト: ${audioSettings.volume}% / ${getSoundLabel(audioSettings.sound)}`);
   });
 
-  elements.testAlarm.addEventListener("click", async () => {
-    await scheduleAlarmTest();
-  });
-
   elements.alarmVolume.addEventListener("input", () => {
     audioSettings.volume = clampVolume(Number(elements.alarmVolume.value));
     elements.volumeValue.textContent = `${audioSettings.volume}%`;
@@ -256,36 +249,6 @@ async function enableAudio(playConfirmation = true) {
   if (playConfirmation) {
     playAlarmTone(0.08);
   }
-}
-
-async function scheduleAlarmTest() {
-  await enableAudio(false);
-  window.clearTimeout(alarmTestTimer);
-  window.clearInterval(alarmTestCountdown);
-
-  let remainingSeconds = 10;
-  elements.testAlarm.disabled = true;
-  elements.testAlarm.textContent = `${remainingSeconds}秒後にテスト`;
-  showToast(`10秒後にテストアラームを鳴らします。音量 ${audioSettings.volume}% / ${getSoundLabel(audioSettings.sound)}`);
-
-  alarmTestCountdown = window.setInterval(() => {
-    remainingSeconds -= 1;
-    elements.testAlarm.textContent = remainingSeconds > 0
-      ? `${remainingSeconds}秒後にテスト`
-      : "テスト実行中";
-  }, 1000);
-
-  alarmTestTimer = window.setTimeout(() => {
-    window.clearInterval(alarmTestCountdown);
-    const testDate = new Date();
-    fireAlarm({
-      bosses: ["アラームテスト"],
-      date: testDate,
-      time: formatTime(testDate).slice(0, 5),
-    }, "テスト");
-    elements.testAlarm.disabled = false;
-    elements.testAlarm.textContent = "10秒後にアラームテスト";
-  }, 10000);
 }
 
 function tick() {

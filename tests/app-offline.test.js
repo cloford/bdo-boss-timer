@@ -150,7 +150,6 @@ test("HTML includes required application controls", () => {
     'id="countdown"',
     'id="enable-audio"',
     'id="test-volume"',
-    'id="test-alarm"',
     'id="alarm-volume"',
     'id="alarm-sound"',
     'id="notify-toggle"',
@@ -197,12 +196,6 @@ test("Boss schedule contains expected Garmoth slots", () => {
 test("All alarm offsets are configured", () => {
   const offsets = context.__testState.ALERT_OFFSETS.map((offset) => offset.minutes).sort((a, b) => a - b);
   assert(JSON.stringify(offsets) === JSON.stringify([0, 5, 15]), "alarm offsets should be 0, 5, and 15 minutes");
-});
-
-test("Delayed alarm test button path is implemented", () => {
-  assert(appJs.includes("scheduleAlarmTest"), "scheduleAlarmTest function is missing");
-  assert(appJs.includes("10000"), "alarm test should wait 10 seconds");
-  assert(appJs.includes("アラームテスト"), "alarm test label is missing");
 });
 
 test("Alarm volume and sound selection are implemented", () => {
