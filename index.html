@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>黒い砂漠 ボスタイマー</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app">
+      <section class="hero" aria-labelledby="app-title">
+        <div>
+          <p class="eyebrow">Black Desert Boss Timer</p>
+          <h1 id="app-title">ボス出現アラーム</h1>
+        </div>
+        <div class="clock">
+          <span id="current-date">--</span>
+          <strong id="current-time">--:--:--</strong>
+        </div>
+      </section>
+
+      <section class="next-panel" aria-label="次のボス">
+        <div class="next-copy">
+          <span class="label">次の対象ボス</span>
+          <h2 id="next-boss">--</h2>
+          <p id="next-detail">チェックされたボスから次回予定を計算します。</p>
+        </div>
+        <div class="countdown" id="countdown">--:--:--</div>
+      </section>
+
+      <section class="toolbar" aria-label="アラーム設定">
+        <button id="enable-audio" type="button">アラーム有効化</button>
+        <label class="toggle">
+          <input id="notify-toggle" type="checkbox">
+          <span>通知も使う</span>
+        </label>
+        <button id="select-all" type="button">全選択</button>
+        <button id="clear-all" type="button">全解除</button>
+      </section>
+
+      <section class="content">
+        <aside class="boss-selector" aria-labelledby="boss-filter-title">
+          <h2 id="boss-filter-title">鳴らすボス</h2>
+          <div id="boss-list" class="boss-list"></div>
+        </aside>
+
+        <section class="schedule-panel" aria-labelledby="today-title">
+          <div class="section-heading">
+            <h2 id="today-title">今後の予定</h2>
+            <span id="selected-count">--</span>
+          </div>
+          <div id="upcoming-list" class="upcoming-list"></div>
+        </section>
+      </section>
+
+      <details class="source-table">
+        <summary>元の表を見る</summary>
+        <img
+          src="https://s1.pearlcdn.com/JP/Upload/WIKI/03f443bfce220260107101204849.png"
+          alt="黒い砂漠のワールドボス出現時間表"
+        >
+        <p>
+          参照元:
+          <a href="https://www.jp.playblackdesert.com/ja-JP/Wiki?wikiNo=69" target="_blank" rel="noreferrer">
+            公式Wiki ワールドボス
+          </a>
+        </p>
+      </details>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
