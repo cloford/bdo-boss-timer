@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <title>ボス出現タイマー テスト仕様書</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 16mm;
+      }
+
+      body {
+        color: #1d232b;
+        font-family: "Yu Gothic", "Meiryo", sans-serif;
+        line-height: 1.65;
+      }
+
+      h1 {
+        border-bottom: 3px solid #222;
+        font-size: 24px;
+        margin: 0 0 16px;
+        padding-bottom: 8px;
+      }
+
+      h2 {
+        border-left: 6px solid #2f6b3f;
+        font-size: 17px;
+        margin: 26px 0 10px;
+        padding-left: 10px;
+      }
+
+      table {
+        border-collapse: collapse;
+        font-size: 12px;
+        margin-top: 8px;
+        width: 100%;
+      }
+
+      th,
+      td {
+        border: 1px solid #9aa4b2;
+        padding: 6px 8px;
+        vertical-align: top;
+      }
+
+      th {
+        background: #e9efe9;
+        text-align: left;
+      }
+
+      .meta {
+        background: #f5f7f5;
+        border: 1px solid #cfd7cf;
+        padding: 10px 12px;
+      }
+
+      .pass {
+        color: #186b36;
+        font-weight: 700;
+      }
+
+      code {
+        background: #f2f4f7;
+        border-radius: 4px;
+        padding: 1px 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ボス出現タイマー テスト仕様書</h1>
+
+    <div class="meta">
+      <div><strong>対象:</strong> 黒い砂漠 ボス出現タイマー</div>
+      <div><strong>作成日:</strong> 2026年5月17日</div>
+      <div><strong>対象ファイル:</strong> <code>index.html</code>, <code>styles.css</code>, <code>app.js</code>, <code>assets/*</code></div>
+      <div><strong>実行環境:</strong> Windows ローカル環境、オフライン起動想定</div>
+    </div>
+
+    <h2>1. テスト目的</h2>
+    <p>
+      本仕様書は、ボス出現タイマーがインターネット接続なしで起動し、主要機能であるボス予定表示、
+      アラーム設定、アラームテスト、ローカル画像表示、マトリックス風背景表示に必要な構成を満たしていることを確認する。
+    </p>
+
+    <h2>2. テスト範囲</h2>
+    <table>
+      <thead>
+        <tr><th>区分</th><th>確認内容</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>画面構成</td><td>次のボス、カウントダウン、アラーム操作、ボス選択、今後の予定、元の表が表示できること。</td></tr>
+        <tr><td>オフライン資産</td><td>表画像、SVGアイコン、ショートカット用ICOがローカルに存在すること。</td></tr>
+        <tr><td>スケジュール</td><td>ガーモスを含む登録済みボス時刻が内部データとして保持されていること。</td></tr>
+        <tr><td>アラーム</td><td>15分前、5分前、ちょうど、および10秒後テストアラームの処理が存在すること。</td></tr>
+        <tr><td>背景</td><td>表画像背景ではなく、Canvasによるマトリックス風背景に切り替わっていること。</td></tr>
+      </tbody>
+    </table>
+
+    <h2>3. テストケース</h2>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>観点</th><th>手順</th><th>期待結果</th><th>結果</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>TC-001</td><td>必須UI</td><td><code>index.html</code> の主要IDを確認する。</td><td>必要な操作部品が存在する。</td><td class="pass">PASS</td></tr>
+        <tr><td>TC-002</td><td>オフライン資産</td><td><code>assets</code> 配下の画像とアイコンを確認する。</td><td>表画像、SVG、ICOが存在する。</td><td class="pass">PASS</td></tr>
+        <tr><td>TC-003</td><td>背景</td><td>CSSとJSの背景実装を確認する。</td><td>Canvas背景が設定され、表画像は背景に使われない。</td><td class="pass">PASS</td></tr>
+        <tr><td>TC-004</td><td>ガーモス時刻</td><td>内部スケジュールからガーモス枠を抽出する。</td><td>元表に基づくガーモス枠が登録されている。</td><td class="pass">PASS</td></tr>
+        <tr><td>TC-005</td><td>通知タイミング</td><td>アラームオフセットを確認する。</td><td>0分、5分、15分前が設定されている。</td><td class="pass">PASS</td></tr>
+        <tr><td>TC-006</td><td>アラームテスト</td><td>テストボタン用処理を確認する。</td><td>押下後10秒でテストアラームを鳴らす処理が存在する。</td><td class="pass">PASS</td></tr>
+      </tbody>
+    </table>
+
+    <h2>4. 実行結果</h2>
+    <p>自動テストコマンド:</p>
+    <p><code>node tests\app-offline.test.js</code></p>
+    <table>
+      <thead>
+        <tr><th>項目</th><th>結果</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>HTML includes required application controls</td><td class="pass">PASS</td></tr>
+        <tr><td>Offline assets are present and referenced</td><td class="pass">PASS</td></tr>
+        <tr><td>Matrix rain background is configured locally</td><td class="pass">PASS</td></tr>
+        <tr><td>Boss schedule contains expected Garmoth slots</td><td class="pass">PASS</td></tr>
+        <tr><td>All alarm offsets are configured</td><td class="pass">PASS</td></tr>
+        <tr><td>Delayed alarm test button path is implemented</td><td class="pass">PASS</td></tr>
+      </tbody>
+    </table>
+
+    <h2>5. 補足</h2>
+    <p>
+      ブラウザの音声再生はユーザー操作後に許可される仕様のため、実機確認では
+      <code>10秒後にアラームテスト</code> ボタンを押し、10秒後に音と通知表示が出ることを確認する。
+      本テストでは、オフライン起動に必要な資産とアラーム処理の存在を自動確認した。
+    </p>
+  </body>
+</html>
