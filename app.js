@@ -131,7 +131,7 @@ function loadAudioSettings() {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
     return {
       volume: clampVolume(Number(saved?.volume ?? DEFAULT_AUDIO_SETTINGS.volume)),
-      sound: ["bell", "chime", "alert", "long-alert"].includes(saved?.sound) ? saved.sound : DEFAULT_AUDIO_SETTINGS.sound,
+      sound: ["bell", "chime", "alert", "reminder"].includes(saved?.sound) ? saved.sound : DEFAULT_AUDIO_SETTINGS.sound,
       alertOffsets: normalizeAlertOffsets(saved?.alertOffsets),
     };
   } catch {
@@ -238,7 +238,7 @@ function bindControls() {
 
   elements.testVolume.addEventListener("click", async () => {
     await enableAudio(false);
-    playAlarmTone(audioSettings.sound === "long-alert" ? 5 : 1.4);
+    playAlarmTone(audioSettings.sound === "reminder" ? 10 : 1.4);
     showToast(`音量テスト: ${audioSettings.volume}% / ${getSoundLabel(audioSettings.sound)}`);
   });
 
@@ -660,20 +660,20 @@ function updateStatus(upcomingAlarms) {
 
 function getSoundPattern(sound) {
   if (sound === "chime") return [523, 659, 784, 1046];
-  if (sound === "long-alert") return [880, 740, 880, 660, 880, 740, 988, 880];
+  if (sound === "reminder") return [523, 659, 784, 659];
   if (sound === "alert") return [880, 880, 740, 880, 740];
   return [440, 660, 880];
 }
 
 function getSoundLabel(sound) {
   if (sound === "chime") return "チャイム";
-  if (sound === "long-alert") return "長い警告";
+  if (sound === "reminder") return "リマインダー";
   if (sound === "alert") return "警告";
   return "ベル";
 }
 
 function getAlarmDuration() {
-  return audioSettings.sound === "long-alert" ? 14 : 4;
+  return audioSettings.sound === "reminder" ? 10 : 4;
 }
 
 function getPresetLabel(preset) {
