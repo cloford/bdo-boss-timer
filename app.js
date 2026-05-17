@@ -131,7 +131,7 @@ function loadAudioSettings() {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
     return {
       volume: clampVolume(Number(saved?.volume ?? DEFAULT_AUDIO_SETTINGS.volume)),
-      sound: ["bell", "chime", "alert"].includes(saved?.sound) ? saved.sound : DEFAULT_AUDIO_SETTINGS.sound,
+      sound: ["bell", "chime", "alert", "long-alert"].includes(saved?.sound) ? saved.sound : DEFAULT_AUDIO_SETTINGS.sound,
       alertOffsets: normalizeAlertOffsets(saved?.alertOffsets),
     };
   } catch {
@@ -233,12 +233,12 @@ function renderBossOptions() {
 function bindControls() {
   elements.enableAudio.addEventListener("click", async () => {
     await enableAudio();
-    showToast("アラームを有効化しました。ブラウザを開いたままにしておくと鳴ります。");
+    showToast("アラームを有効化しました。アプリを開いたままにしておくと鳴ります。");
   });
 
   elements.testVolume.addEventListener("click", async () => {
     await enableAudio(false);
-    playAlarmTone(1.4);
+    playAlarmTone(audioSettings.sound === "long-alert" ? 5 : 1.4);
     showToast(`音量テスト: ${audioSettings.volume}% / ${getSoundLabel(audioSettings.sound)}`);
   });
 
@@ -272,7 +272,7 @@ function bindControls() {
       await navigator.clipboard.writeText(snapshot);
       showToast("設定をクリップボードにコピーしました。");
     } catch {
-      showToast("設定コピーに失敗しました。ブラウザの権限を確認してください。");
+      showToast("設定コピーに失敗しました。クリップボード権限を確認してください。");
     }
   });
 
@@ -292,7 +292,7 @@ function bindControls() {
     if (!elements.notifyToggle.checked) return;
     if (!window.Notification) {
       elements.notifyToggle.checked = false;
-      showToast("このブラウザでは通知を使えません。");
+      showToast("この環境では通知を使えません。");
       return;
     }
     const permission = await window.Notification.requestPermission();
@@ -506,7 +506,7 @@ function fireAlarm(event, label) {
   const body = `${formatEventDate(event.date)} ${event.time} 出現`;
   showToast(`${title} - ${body}`);
   recordAlarm(title, body, label);
-  playAlarmTone(4);
+  playAlarmTone(getAlarmDuration());
 
   if (elements.notifyToggle.checked && window.Notification && window.Notification.permission === "granted") {
     new window.Notification(title, { body });
@@ -660,14 +660,20 @@ function updateStatus(upcomingAlarms) {
 
 function getSoundPattern(sound) {
   if (sound === "chime") return [523, 659, 784, 1046];
+  if (sound === "long-alert") return [880, 740, 880, 660, 880, 740, 988, 880];
   if (sound === "alert") return [880, 880, 740, 880, 740];
   return [440, 660, 880];
 }
 
 function getSoundLabel(sound) {
   if (sound === "chime") return "チャイム";
+  if (sound === "long-alert") return "長い警告";
   if (sound === "alert") return "警告";
   return "ベル";
+}
+
+function getAlarmDuration() {
+  return audioSettings.sound === "long-alert" ? 14 : 4;
 }
 
 function getPresetLabel(preset) {
