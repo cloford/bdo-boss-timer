@@ -53,6 +53,7 @@ const audioSettings = loadAudioSettings();
 const alarmHistory = loadAlarmHistory();
 const firedAlerts = new Set();
 const activeAudioNodes = new Set();
+const activeAudioTimers = new Set();
 
 let audioContext = null;
 let toastTimer = 0;
@@ -131,7 +132,7 @@ function loadAudioSettings() {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
     return {
       volume: clampVolume(Number(saved?.volume ?? DEFAULT_AUDIO_SETTINGS.volume)),
-      sound: ["bell", "chime", "alert", "reminder"].includes(saved?.sound) ? saved.sound : DEFAULT_AUDIO_SETTINGS.sound,
+      sound: ["bell", "chime", "alert", "reminder", "until-stop"].includes(saved?.sound) ? saved.sound : DEFAULT_AUDIO_SETTINGS.sound,
       alertOffsets: normalizeAlertOffsets(saved?.alertOffsets),
     };
   } catch {
@@ -238,7 +239,7 @@ function bindControls() {
 
   elements.testVolume.addEventListener("click", async () => {
     await enableAudio(false);
-    playAlarmTone(audioSettings.sound === "reminder" ? 10 : 1.4);
+    playAlarmTone(audioSettings.sound === "reminder" || audioSettings.sound === "until-stop" ? 10 : 1.4);
     showToast(`音量テスト: ${audioSettings.volume}% / ${getSoundLabel(audioSettings.sound)}`);
   });
 
@@ -549,6 +550,24 @@ function playAlarmTone(seconds) {
   if (!audioContext || audioContext.state !== "running") return;
 
   stopAlarmSound();
+  if (seconds === "until-stop") {
+    startLoopingAlarm();
+    return;
+  }
+  playToneSegment(seconds);
+  elements.stopAlarm.disabled = false;
+}
+
+function startLoopingAlarm() {
+  playToneSegment(1.4);
+  const intervalId = window.setInterval(() => {
+    playToneSegment(1.4, false);
+  }, 1900);
+  activeAudioTimers.add(intervalId);
+  elements.stopAlarm.disabled = false;
+}
+
+function playToneSegment(seconds, manageStopButton = true) {
   const start = audioContext.currentTime;
   const gain = audioContext.createGain();
   const volume = Math.max(0.0001, audioSettings.volume / 100);
@@ -557,7 +576,8 @@ function playAlarmTone(seconds) {
   gain.gain.exponentialRampToValueAtTime(0.0001, start + seconds);
   gain.connect(audioContext.destination);
   activeAudioNodes.add(gain);
-  window.setTimeout(() => {
+  const cleanupTimer = window.setTimeout(() => {
+    activeAudioTimers.delete(cleanupTimer);
     activeAudioNodes.delete(gain);
     try {
       gain.disconnect();
@@ -568,10 +588,11 @@ function playAlarmTone(seconds) {
       elements.stopAlarm.disabled = true;
     }
   }, seconds * 1000 + 100);
+  activeAudioTimers.add(cleanupTimer);
 
   getSoundPattern(audioSettings.sound).forEach((frequency, index) => {
     const osc = audioContext.createOscillator();
-    osc.type = audioSettings.sound === "alert" ? "square" : "sine";
+    osc.type = audioSettings.sound === "alert" || audioSettings.sound === "until-stop" ? "square" : "sine";
     const noteStart = start + index * 0.12;
     osc.frequency.setValueAtTime(frequency, noteStart);
     osc.connect(gain);
@@ -586,10 +607,17 @@ function playAlarmTone(seconds) {
     activeAudioNodes.add(osc);
   });
 
-  elements.stopAlarm.disabled = false;
+  if (manageStopButton) {
+    elements.stopAlarm.disabled = false;
+  }
 }
 
 function stopAlarmSound() {
+  activeAudioTimers.forEach((timerId) => {
+    window.clearTimeout(timerId);
+    window.clearInterval(timerId);
+  });
+  activeAudioTimers.clear();
   activeAudioNodes.forEach((node) => {
     try {
       if (typeof node.stop === "function") node.stop();
@@ -661,6 +689,7 @@ function updateStatus(upcomingAlarms) {
 function getSoundPattern(sound) {
   if (sound === "chime") return [523, 659, 784, 1046];
   if (sound === "reminder") return [523, 659, 784, 659];
+  if (sound === "until-stop") return [659, 784, 659, 523];
   if (sound === "alert") return [880, 880, 740, 880, 740];
   return [440, 660, 880];
 }
@@ -668,11 +697,13 @@ function getSoundPattern(sound) {
 function getSoundLabel(sound) {
   if (sound === "chime") return "チャイム";
   if (sound === "reminder") return "リマインダー";
+  if (sound === "until-stop") return "ストップまで";
   if (sound === "alert") return "警告";
   return "ベル";
 }
 
 function getAlarmDuration() {
+  if (audioSettings.sound === "until-stop") return "until-stop";
   return audioSettings.sound === "reminder" ? 10 : 4;
 }
 
